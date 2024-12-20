@@ -20,6 +20,7 @@ audio_folder = "data\\audio_files"
 metadata_dile = "data\\metadata.json"
 max_pages = 100
 start_page = 1
+download_max_tries = 20
 
 # set default download directory
 download_dir = os.path.join(os.getcwd(), audio_folder)
@@ -41,6 +42,10 @@ driver = webdriver.Firefox(options=options)
 # Load the page
 log.debug(f"Loading the page at {base_url}")
 driver.get(base_url+str(start_page))
+
+# Wait for captcha to be solved
+log.debug("Waiting for captcha to be solved...")
+input("Solver the captcha and press Enter to continue...")
 
 if not os.path.exists(audio_folder):
     log.debug(f"Creating audio folder at {audio_folder}")
@@ -99,6 +104,8 @@ for page in range(start_page, max_pages+1):
             
             side_panel = wait_for_element(driver, By.CLASS_NAME, "sidePanel--XFASR")
             scroll_to_element(driver, side_panel)
+            # Re-fetch the side_panel element to avoid stale element reference
+            side_panel = wait_for_element(driver, By.CLASS_NAME, "sidePanel--XFASR")
             download_button = side_panel.find_element(By.CLASS_NAME, "triggerWrapper--NACCC")
             final_download_button = download_button.find_element(By.TAG_NAME, "button")
             final_download_button.click()
@@ -117,9 +124,24 @@ for page in range(start_page, max_pages+1):
                 time.sleep(1)
             
             file_name = get_downloaded_file_name()
-            log.debug(f"Downloaded file name: {file_name}")
+
+            # Wait for the file to be downloaded
+            log.debug(f"Downloading file: {file_name}")
+            
+            tries = 0
+            while not os.path.exists(os.path.join(download_dir, file_name)):
+                time.sleep(1)
+                tries += 1
+                if tries >= download_max_tries:
+                    log.error("Download failed, waited too long. Skipping...")
+                    break
+            
+            while not os.path.exists(os.path.join(download_dir, file_name)):
+                continue
 
             data = {
+                "page": page,
+                "page_link": audio_page_link,
                 "music_name": music_name,
                 "credits": credits,
                 "tags": tags,
