@@ -94,14 +94,19 @@ for page in range(start_page, max_pages+1):
             credits = attribution_card.get_attribute("href")
             log.info(f"Credits link: {credits}")
 
-            tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
-            scroll_to_element(driver, tags_parent)
-            # Re-fetch the tags_parent element to avoid stale element reference
-            tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
-            tags_cards = tags_parent.find_elements(By.CLASS_NAME, "label--Ngqjq")
-            tags = [tag.text for tag in tags_cards]
-            log.info(f"Tags: {tags}")
-            
+            #optional tags
+            try:
+                tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
+                scroll_to_element(driver, tags_parent)
+                # Re-fetch the tags_parent element to avoid stale element reference
+                tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
+                tags_cards = tags_parent.find_elements(By.CLASS_NAME, "label--Ngqjq")
+                tags = [tag.text for tag in tags_cards]
+                log.info(f"Tags: {tags}")
+            except Exception as e:
+                log.error(f"Error getting tags: {e}")
+                tags = []
+
             side_panel = wait_for_element(driver, By.CLASS_NAME, "sidePanel--XFASR")
             scroll_to_element(driver, side_panel)
             # Re-fetch the side_panel element to avoid stale element reference
