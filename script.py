@@ -83,11 +83,11 @@ for page in range(start_page, max_pages+1):
             # Wait for elements to be available
             title_card = wait_for_element(driver, By.CLASS_NAME, "title--VRujt")
             music_name = title_card.text
-            log.debug(f"Music name: {music_name}")
+            log.info(f"Music name: {music_name}")
 
             attribution_card = wait_for_element(driver, By.CLASS_NAME, "userName--owby3")
             credits = attribution_card.get_attribute("href")
-            log.debug(f"Credits link: {credits}")
+            log.info(f"Credits link: {credits}")
 
             tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
             scroll_to_element(driver, tags_parent)
@@ -95,11 +95,11 @@ for page in range(start_page, max_pages+1):
             tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
             tags_cards = tags_parent.find_elements(By.CLASS_NAME, "label--Ngqjq")
             tags = [tag.text for tag in tags_cards]
-            log.debug(f"Tags: {tags}")
+            log.info(f"Tags: {tags}")
             
             side_panel = wait_for_element(driver, By.CLASS_NAME, "sidePanel--XFASR")
             scroll_to_element(driver, side_panel)
-            downlaod_button = side_panel.find_element(By.CLASS_NAME, "triggerWrapper--NACCC")
+            download_button = side_panel.find_element(By.CLASS_NAME, "triggerWrapper--NACCC")
             final_download_button = download_button.find_element(By.TAG_NAME, "button")
             final_download_button.click()
             log.debug("Clicked download button")
