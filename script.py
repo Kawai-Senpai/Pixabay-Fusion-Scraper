@@ -1,117 +1,145 @@
 import time
 import json
 import os
-from selenium import webdriver
+from seleniumwire import webdriver  # Import from seleniumwire
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-import requests
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.firefox.options import Options
+from ultraprint.logging import logger
 
-# Set up Chrome WebDriver with options
-options = Options()
-options.headless = False  # Set to True to run without opening the browser window
+# Create a logger object
+log = logger('scraping_log', include_extra_info=False, write_to_file=False, log_level='DEBUG')
 
 # Initialize the driver
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+log.debug("Initializing the Firefox WebDriver")
 
-# Base URL and audio folder setup
+# Parameters
 base_url = "https://pixabay.com/music/search/?order=ec&pagi="
-audio_folder = "audio_files"
+audio_folder = "data\\audio_files"
+metadata_dile = "data\\metadata.json"
+max_pages = 100
+start_page = 1
+
+# set default download directory
+download_dir = os.path.join(os.getcwd(), audio_folder)
+
+# Set the download directory
+log.debug(f"Setting the download directory to {download_dir}")
+profile = webdriver.FirefoxProfile()
+profile.set_preference("browser.download.folderList", 2)
+profile.set_preference("browser.download.manager.showWhenStarting", False)
+profile.set_preference("browser.download.dir", download_dir)
+profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "audio/mpeg")
+profile.set_preference("browser.download.useDownloadDir", True)
+profile.set_preference("browser.download.panel.shown", False)
+
+options = Options()
+options.profile = profile
+driver = webdriver.Firefox(options=options)
+
+# Load the page
+log.debug(f"Loading the page at {base_url}")
+driver.get(base_url+str(start_page))
+
 if not os.path.exists(audio_folder):
+    log.debug(f"Creating audio folder at {audio_folder}")
     os.makedirs(audio_folder)
 
+def get_downloaded_file_name():
+    for request in driver.requests:
+        if request.response and 'cdn.pixabay.com/download/audio' in request.url:
+            file_name = request.url.split('filename=')[-1]
+            return file_name
 
-# Function to get audio details from each individual audio page
-def get_audio_details(audio_url):
-    driver.get(audio_url)
-    time.sleep(2)  # Wait for the page to load
+def wait_for_element(driver, by, value, timeout=10):
+    return WebDriverWait(driver, timeout).until(
+        EC.presence_of_element_located((by, value))
+    )
 
-    # Extracting audio details
-    title = driver.find_element(By.CSS_SELECTOR, 'h1').text.strip()
-    genre = driver.find_element(By.CSS_SELECTOR, '.category').text.strip()
-    singer_album = driver.find_element(By.CSS_SELECTOR, '.artist').text.strip()
-    description = driver.find_element(By.CSS_SELECTOR, '.description').text.strip()
+def scroll_to_element(driver, element):
+    driver.execute_script("arguments[0].scrollIntoView();", element)
 
-    # Get the audio file URL
-    audio_file = driver.find_element(By.CSS_SELECTOR, 'audio').get_attribute('src')
+for page in range(start_page, max_pages+1):
+    log.debug(f"Processing page {page}")
+    
+    media_items = driver.find_elements(By.CLASS_NAME, "name--q8l1g")
+    log.debug(f"Found {len(media_items)} media items on page {page}")
 
-    return {
-        'title': title,
-        'genre': genre,
-        'singer_album': singer_album,
-        'description': description,
-        'audio_file': audio_file
-    }
-
-
-# Function to scrape all audio files on a single page
-def scrape_audio_on_page(page_num):
-    url = base_url + str(page_num)
-    driver.get(url)
-    time.sleep(3)  # Wait for the page to load
-
-    # Find each audio entry on the page
-    audio_links = driver.find_elements(By.CSS_SELECTOR, 'a.media__item')
-    page_audio_data = []
-
-    for audio in audio_links:
-        audio_url = audio.get_attribute('href')
-
-        # Navigate to audio page, scrape data, and then return to the main page
-        driver.get(audio_url)
-        time.sleep(2)  # Wait for the audio page to load
-
-        audio_details = get_audio_details(audio_url)
-        page_audio_data.append(audio_details)
-
-        # Go back to the main page after scraping the audio
-        driver.back()
-        time.sleep(2)  # Wait for the page to load
-
-    return page_audio_data
-
-
-# Save data to a JSON file
-def save_data_to_json(data, filename='audio_data.json'):
-    with open(filename, 'w', encoding='utf-8') as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
-
-
-# Scrape all pages
-def scrape_all_pages(total_pages=4745):
-    all_audio_data = []
-
-    for page_num in range(1, total_pages + 1):
+    for item in media_items:
         try:
-            print(f"Scraping page {page_num}...")
-            page_data = scrape_audio_on_page(page_num)
-            all_audio_data.extend(page_data)
+            # get the href
+            audio_page_link = item.get_attribute("href")
+            log.debug(f"Found audio page link: {audio_page_link}")
 
-            # Save data after each page
-            save_data_to_json(all_audio_data)
+            # Load the audio page (new tab)
+            log.debug(f"Loading the audio page at {audio_page_link}")
 
-            # Optionally, download the audio files
-            for idx, data in enumerate(page_data):
-                audio_url = data['audio_file']
-                audio_response = requests.get(audio_url)
-                audio_filename = f"{audio_folder}/audio_{len(all_audio_data)}_{idx + 1}.mp3"
+            # Open a new tab
+            driver.execute_script("window.open('');")
+            driver.switch_to.window(driver.window_handles[1])
+            driver.get(audio_page_link)
 
-                with open(audio_filename, 'wb') as audio_file:
-                    audio_file.write(audio_response.content)
+            # Wait for elements to be available
+            title_card = wait_for_element(driver, By.CLASS_NAME, "title--VRujt")
+            music_name = title_card.text
+            log.debug(f"Music name: {music_name}")
 
-            # Wait before scraping the next page to avoid overwhelming the server
-            time.sleep(2)  # Adjust the sleep time as needed (e.g., 1-3 seconds)
+            attribution_card = wait_for_element(driver, By.CLASS_NAME, "userName--owby3")
+            credits = attribution_card.get_attribute("href")
+            log.debug(f"Credits link: {credits}")
+
+            tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
+            scroll_to_element(driver, tags_parent)
+            # Re-fetch the tags_parent element to avoid stale element reference
+            tags_parent = wait_for_element(driver, By.CLASS_NAME, "tagsSection--8gH54")
+            tags_cards = tags_parent.find_elements(By.CLASS_NAME, "label--Ngqjq")
+            tags = [tag.text for tag in tags_cards]
+            log.debug(f"Tags: {tags}")
+            
+            side_panel = wait_for_element(driver, By.CLASS_NAME, "sidePanel--XFASR")
+            scroll_to_element(driver, side_panel)
+            downlaod_button = side_panel.find_element(By.CLASS_NAME, "triggerWrapper--NACCC")
+            final_download_button = download_button.find_element(By.TAG_NAME, "button")
+            final_download_button.click()
+            log.debug("Clicked download button")
+
+            time.sleep(1)
+
+            # Wait for the download button to appear
+            download_button = wait_for_element(driver, By.CLASS_NAME, "buttons--cqw3Y")
+            button = download_button.find_element(By.CLASS_NAME, "label--Ngqjq")
+            button.click()
+            log.debug("Clicked final download button")
+
+            log.debug("Waiting for download to complete...")
+            while not get_downloaded_file_name():
+                time.sleep(1)
+            
+            file_name = get_downloaded_file_name()
+            log.debug(f"Downloaded file name: {file_name}")
+
+            data = {
+                "music_name": music_name,
+                "credits": credits,
+                "tags": tags,
+                "file_name": file_name
+            }
+
+            # Save the data (append to the file)
+            with open(metadata_dile, "a") as f:
+                f.write(json.dumps(data))
+                f.write("\n")
+            log.debug("Saved metadata to file")
 
         except Exception as e:
-            print(f"Error scraping page {page_num}: {e}")
-            continue
+            log.error(f"Error processing item: {e}")
+        
+        finally:
+            # Close the current tab and switch back to the main tab
+            driver.close()
+            driver.switch_to.window(driver.window_handles[0])
+            log.debug("Closed current tab and switched back to main tab")
 
-    print("Scraping complete.")
-
-
-# Start the scraping process
-scrape_all_pages(total_pages=4745)
-
-# Quit the WebDriver after scraping is complete
-driver.quit()
+    driver.get(base_url+str(page+1))
+    log.debug(f"Loaded next page: {base_url+str(page+1)}")
