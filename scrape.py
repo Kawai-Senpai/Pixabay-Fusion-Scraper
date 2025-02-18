@@ -315,7 +315,7 @@ def main():
                 last_height = new_height
 
             links = [el.get_attribute("href")
-                     for el in driver.find_elements(By.CSS_SELECTOR, "a.link--WHWzm")]
+                    for el in driver.find_elements(By.CSS_SELECTOR, "a.link--WHWzm")]
             log.info(f"Found {len(links)} links on page {page}")
             
             for url in links:
