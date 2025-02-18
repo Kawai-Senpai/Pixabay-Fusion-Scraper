@@ -1,3 +1,9 @@
+
+#! Do not include the following files in the repository
 data/audio/*
 data/images/*
 .env
+
+#! Include the following files in the repository
+!data/audio/
+!data/images/
