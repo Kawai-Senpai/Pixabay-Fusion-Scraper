@@ -130,4 +130,3 @@ This tool is provided "as is", without any warranty. Use at your own risk.
 ---
 
 :smiley: Happy Scraping! :smiley:
-````
