@@ -1,0 +1,7 @@
+{
+    "target_downloads": 6000,
+    "firefox_binary": "C:/Program Files/Mozilla Firefox/firefox.exe",
+    "download_format": "video/mp4",
+    "download_delay": 2,
+    "max_api_timeout": 20
+}

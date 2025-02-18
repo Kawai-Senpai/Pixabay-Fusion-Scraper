@@ -1,4 +1,7 @@
 selenium-wire==5.1.0
+requests==2.31.0
 selenium==4.14.0
-ultraprint==3.1.0
 webdriver_manager==4.0.2
+ultraprint==3.2.0
+tqdm==4.67.1
+ultraconfiguration==1.2.0
