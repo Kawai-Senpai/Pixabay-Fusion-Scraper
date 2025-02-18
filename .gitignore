@@ -5,5 +5,5 @@ data/images/*
 .env
 
 #! Include the following files in the repository
-!data/audio/
-!data/images/
+!data/audio/.gitkeep
+!data/images/.gitkeep
