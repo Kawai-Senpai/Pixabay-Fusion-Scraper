@@ -234,7 +234,8 @@ def process_photo(url):
         log.info("Photo info retrieved from API successfully")
         
         # Choose high resolution image - prefer largeImageURL, fallback to webformatURL
-        image_url = photo_info.get("largeImageURL") or photo_info.get("webformatURL")
+        # or photo_info.get("webformatURL") #! Removed WebformatURL Functionality
+        image_url = photo_info.get("largeImageURL")
         if not image_url:
             log.error("No suitable image URL found (skipping photo)")
             return False

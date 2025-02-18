@@ -15,7 +15,7 @@ This program provides a menu-driven interface, allowing you to choose between sc
 -   :keyboard: **Menu-Driven Interface**: Select between photos and videos at the start of the program.
 -   :arrow_down: **High-Quality Downloads**:
     -   For videos, the scraper intelligently selects the best available resolution, excluding low-quality "tiny" options.
-    -   For photos, it prioritizes `largeImageURL` and gracefully falls back to `webformatURL` when necessary.
+    -   For photos, it targets `largeImageURL`.
 -   :recycle: **Progress Handling**: Automatically saves progress, allowing you to resume scraping sessions without losing your place.
 -   :scroll: **Detailed Logging**: Utilizes a custom logger to provide comprehensive debug and activity logs, ensuring transparency and easy troubleshooting.
 -   :wrench: **Highly Configurable**: Easily adjust settings via a `config.json` file and environment variables, tailoring the scraper to your specific needs.
