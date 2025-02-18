@@ -82,7 +82,7 @@ Follow these steps to set up the Pixabay Scraper:
 
 3.  **:open_file_folder: Folder Structure**:
 
-    -   Video downloads will be stored in the `data/audio/audio_files` directory.
+    -   Video downloads will be stored in the `data/videos/video_files` directory.
     -   Photo downloads will be stored in the `data/images/photo_files` directory.
     -   Progress and metadata are stored in corresponding `progress.json` and `metadata.json` files within their respective directories.
 

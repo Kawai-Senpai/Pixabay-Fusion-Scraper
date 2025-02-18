@@ -38,16 +38,15 @@ if content_type == "photos":
     metadata_file = os.path.join("data", "images", "metadata.json")
     BASE_URL = "https://pixabay.com/photos/search/?order=ec&pagi={}"
 else:
-    DOWNLOAD_FOLDER = os.path.join("data", "audio", "audio_files")
-    PROGRESS_FILE = os.path.join("data", "audio", "progress.json")
-    metadata_file = os.path.join("data", "audio", "metadata.json")
+    DOWNLOAD_FOLDER = os.path.join("data", "videos", "video_files")
+    PROGRESS_FILE = os.path.join("data", "videos", "progress.json")
+    metadata_file = os.path.join("data", "videos", "metadata.json")
     BASE_URL = "https://pixabay.com/videos/search/?order=ec&pagi={}"
 
 # -----------------------------------------------------------------------------
 # CONFIGURATION & SETUP
 # -----------------------------------------------------------------------------
-# All data is stored under data folder; audio files are in data/audio_files
-# Create necessary directories (update to create the new DOWNLOAD_FOLDER)
+# All data is stored under data folder; video files are in data/videos/video_files
 for folder in [DOWNLOAD_FOLDER, os.path.dirname(PROGRESS_FILE)]:
     os.makedirs(folder, exist_ok=True)
 log = create_logger('scraping_log', include_extra_info=False, write_to_file=False, log_level='DEBUG')

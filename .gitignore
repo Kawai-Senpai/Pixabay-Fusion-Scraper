@@ -2,8 +2,10 @@
 #! Do not include the following files in the repository
 data/audio/*
 data/images/*
+data/videos/*
 .env
 
 #! Include the following files in the repository
 !data/audio/.gitkeep
 !data/images/.gitkeep
+!data/videos/.gitkeep
